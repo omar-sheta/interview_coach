@@ -1,131 +1,81 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import LoginPage from './pages/LoginPage.jsx';
 import SignUpPage from './pages/SignUpPage.jsx';
-import CandidateDashboard from './pages/CandidateDashboardNew.jsx';
-import WorkspacePage from './pages/WorkspacePage.jsx';
 import NotFound from './pages/NotFound.jsx';
 import LogoutPage from './pages/LogoutPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
-import CreateInterview from './pages/CreateInterview.jsx';
-import InterviewDetail from './pages/InterviewDetail.jsx';
-import InterviewResultDetail from './pages/InterviewResultDetail.jsx';
-import CandidateDetail from './pages/CandidateDetail.jsx';
-import CandidateResultDetail from './pages/CandidateResultDetail.jsx';
-import InterviewSuccessPage from './pages/InterviewSuccessPage.jsx';
 
-// New Learning Platform Pages
+// EngCoach Core Pages
 import MyLearningPath from './pages/MyLearningPath.jsx';
 import Onboarding from './pages/Onboarding.jsx';
-import WrittenPractice from './pages/WrittenPractice.jsx';
 import Workspace from './pages/Workspace.jsx';
 import ResultsReport from './pages/ResultsReport.jsx';
+import Dashboard from './pages/Dashboard.jsx';
 
 function App() {
+  const location = useLocation();
+
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignUpPage />} />
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Public Routes */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/logout" element={<LogoutPage />} />
 
-      {/* Learning Platform Routes (New) */}
-      <Route
-        path="/learning"
-        element={
-          <ProtectedRoute allowedRoles={['candidate']}>
-            <MyLearningPath />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/onboarding"
-        element={
-          <ProtectedRoute allowedRoles={['candidate']}>
-            <Onboarding />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/practice/written/:moduleId"
-        element={
-          <ProtectedRoute allowedRoles={['candidate']}>
-            <WrittenPractice />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/workspace/:moduleId"
-        element={
-          <ProtectedRoute allowedRoles={['candidate']}>
-            <Workspace />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/results/:sessionId"
-        element={
-          <ProtectedRoute allowedRoles={['candidate']}>
-            <ResultsReport />
-          </ProtectedRoute>
-        }
-      />
+        {/* EngCoach Routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['candidate']}>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/onboarding"
+          element={
+            <ProtectedRoute allowedRoles={['candidate']}>
+              <Onboarding />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/path"
+          element={
+            <ProtectedRoute allowedRoles={['candidate']}>
+              <MyLearningPath />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/workspace/:sessionId"
+          element={
+            <ProtectedRoute allowedRoles={['candidate']}>
+              <Workspace />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/results/:sessionId"
+          element={
+            <ProtectedRoute allowedRoles={['candidate']}>
+              <ResultsReport />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* Legacy Candidate Routes */}
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['candidate']}>
-            <CandidateDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/candidate-dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['candidate']}>
-            <CandidateDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/workspace"
-        element={
-          <ProtectedRoute allowedRoles={['candidate']}>
-            <WorkspacePage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/candidate"
-        element={
-          <ProtectedRoute allowedRoles={['candidate']}>
-            <CandidateDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/interview/success"
-        element={
-          <ProtectedRoute allowedRoles={['candidate']}>
-            <InterviewSuccessPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/candidate/results/:sessionId"
-        element={
-          <ProtectedRoute allowedRoles={['candidate']}>
-            <CandidateResultDetail />
-          </ProtectedRoute>
-        }
-      />
+        {/* Legacy redirect */}
+        <Route path="/learning" element={<Navigate to="/path" replace />} />
 
-      <Route path="/logout" element={<LogoutPage />} />
-      <Route path="/unauthorized" element={<div>Unauthorized Access</div>} />
-      <Route path="*" element={<div>Page Not Found</div>} />
-    </Routes>
+        {/* Error Routes */}
+        <Route path="/unauthorized" element={<div className="min-h-screen bg-bg-dark flex items-center justify-center text-white">Unauthorized Access</div>} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AnimatePresence>
   );
 }
 
 export default App;
-
-

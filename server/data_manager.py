@@ -598,9 +598,16 @@ class DataManager:
         cursor = conn.cursor()
         
         now = datetime.now().isoformat()
+        track_id = str(uuid.uuid4())
+        
+        # Extract CV summary if available in curriculum
+        cv_summary = curriculum.get("cv_summary", "")
+
         plan = {
+            "id": track_id,
             "user_id": user_id,
             "target_role": target_role,
+            "cv_summary": cv_summary,
             "curriculum": curriculum,
             "created_at": now,
             "updated_at": now,
@@ -608,36 +615,102 @@ class DataManager:
         
         cursor.execute(
             """
-            INSERT OR REPLACE INTO learning_plans 
-            (user_id, target_role, curriculum, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO learning_tracks 
+            (id, user_id, target_role, cv_summary, curriculum_json, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
-            (user_id, target_role, json.dumps(curriculum), now, now)
+            (track_id, user_id, target_role, cv_summary, json.dumps(curriculum), now, now)
         )
         conn.commit()
         conn.close()
         
-        print(f"📚 Created learning plan for user {user_id}")
+        print(f"📚 Created learning track {track_id} for user {user_id}")
         return plan
     
     def get_learning_plan(self, user_id: str) -> Optional[Dict[str, Any]]:
         """Get learning plan by user ID."""
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM learning_plans WHERE user_id = ?", (user_id,))
-        row = cursor.fetchone()
-        conn.close()
         
-        if not row:
-            return None
-        
-        plan = dict(row)
+        # New schema uses learning_tracks
         try:
-            plan['curriculum'] = json.loads(plan['curriculum']) if plan.get('curriculum') else {}
-        except (json.JSONDecodeError, TypeError):
-            plan['curriculum'] = {}
+            cursor.execute("SELECT * FROM learning_tracks WHERE user_id = ? ORDER BY created_at DESC LIMIT 1", (user_id,))
+            row = cursor.fetchone()
+            
+            if not row:
+                conn.close()
+                return None
+            
+            plan = dict(row)
+            # Map new schema headers to old frontend expectations
+            try:
+                plan['curriculum'] = json.loads(plan['curriculum_json']) if plan.get('curriculum_json') else {}
+            except (json.JSONDecodeError, TypeError):
+                plan['curriculum'] = {}
+                
+            conn.close()
+            return plan
+            
+        except Exception as e:
+            print(f"⚠️ Error fetching learning track: {e}")
+            conn.close()
+            return None
+
+    def get_all_learning_plans(self, user_id: str) -> list:
+        """Get all learning plans for a user."""
+        conn = get_db_connection()
+        cursor = conn.cursor()
         
-        return plan
+        try:
+            cursor.execute(
+                "SELECT * FROM learning_tracks WHERE user_id = ? ORDER BY created_at DESC", 
+                (user_id,)
+            )
+            rows = cursor.fetchall()
+            
+            plans = []
+            for row in rows:
+                plan = dict(row)
+                try:
+                    plan['curriculum'] = json.loads(plan['curriculum_json']) if plan.get('curriculum_json') else {}
+                except (json.JSONDecodeError, TypeError):
+                    plan['curriculum'] = {}
+                plans.append(plan)
+                
+            conn.close()
+            return plans
+            
+        except Exception as e:
+            print(f"⚠️ Error fetching learning tracks: {e}")
+            conn.close()
+            return []
+
+    def delete_learning_plan(self, plan_id: str, user_id: str) -> bool:
+        """Delete a learning plan by ID (only if owned by user)."""
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Verify ownership
+            cursor.execute(
+                "SELECT id FROM learning_tracks WHERE id = ? AND user_id = ?",
+                (plan_id, user_id)
+            )
+            if not cursor.fetchone():
+                conn.close()
+                return False
+            
+            # Delete the plan
+            cursor.execute("DELETE FROM learning_tracks WHERE id = ?", (plan_id,))
+            conn.commit()
+            conn.close()
+            print(f"🗑️ Deleted learning track {plan_id}")
+            return True
+            
+        except Exception as e:
+            print(f"⚠️ Error deleting learning track: {e}")
+            conn.close()
+            return False
 
     # Mentorship Platform Methods -------------------------------------------
     def create_practice_session(

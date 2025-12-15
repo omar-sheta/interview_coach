@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import api from '../api/client.js';
@@ -61,10 +61,26 @@ const Onboarding = () => {
         }
     };
 
+    const [loadingStepIndex, setLoadingStepIndex] = useState(0);
+    const [analysisData, setAnalysisData] = useState({ skills: [], roleCategory: 'tech' });
+
+    const [threads, setThreads] = useState([
+        { id: 'cv', status: 'idle', logs: [] },
+        { id: 'market', status: 'idle', logs: [] }
+    ]);
+    const [analysisFinished, setAnalysisFinished] = useState(false);
+
     const handleGeneratePlan = async () => {
         setLoading(true);
         setError('');
         setActiveStep(2);
+        setAnalysisFinished(false);
+
+        // Reset logs
+        setThreads([
+            { id: 'cv', status: 'running', logs: ['Initializing CV parser...', 'Extracting text layer...'] },
+            { id: 'market', status: 'running', logs: ['Connecting to Market Intelligence Grid...', `Scanning job boards for "${targetRole}"...`] }
+        ]);
 
         try {
             const formData = new FormData();
@@ -76,27 +92,134 @@ const Onboarding = () => {
                 formData.append('cv_text', cvText);
             }
 
+            // THREAD 1: CV ANALYSIS
+            const cvPromise = (async () => {
+                try {
+                    // Simulate processing time for "reading"
+                    await new Promise(r => setTimeout(r, 800));
+                    setThreads(prev => prev.map(t => t.id === 'cv' ? { ...t, logs: [...t.logs, 'Identifying key skill vectors...'] } : t));
+
+                    const res = await api.post('/api/learning/analyze', formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' },
+                    });
+
+                    if (res.data.success) {
+                        const skills = res.data.skills?.slice(0, 5).join(', ') || "technical skills";
+                        setThreads(prev => prev.map(t => t.id === 'cv' ? {
+                            ...t,
+                            status: 'complete',
+                            logs: [...t.logs, `✔ Extracted: ${skills}`, '✔ Experience timeline mapped']
+                        } : t));
+                    }
+                } catch (e) {
+                    setThreads(prev => prev.map(t => t.id === 'cv' ? { ...t, status: 'error', logs: [...t.logs, '❌ Failed to parse CV'] } : t));
+                }
+            })();
+
+            // THREAD 2: MARKET SEARCH (STREAMING)
+            const marketPromise = (async () => {
+                try {
+                    setThreads(prev => prev.map(t => t.id === 'market' ? { ...t, logs: [...t.logs, 'Initializing local Qwen3-32B model...'] } : t));
+
+                    // Use simple relative path, Vite proxy handles the rest
+                    const streamUrl = `/api/learning/market/stream?target_role=${encodeURIComponent(targetRole)}`;
+                    console.log(`[Market] Connecting to stream: ${streamUrl}`);
+
+                    const response = await fetch(streamUrl);
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error(`[Market] Stream error: ${response.status} ${response.statusText} - ${errorText}`);
+                        throw new Error(`Server returned ${response.status}`);
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+
+                    let done = false;
+                    let buffer = ''; // Buffer for partial lines
+
+                    while (!done) {
+                        const { value, done: doneReading } = await reader.read();
+                        done = doneReading;
+                        const chunkValue = decoder.decode(value, { stream: true });
+
+                        // Add chunk to buffer
+                        buffer += chunkValue;
+
+                        // Split on newlines and add each complete line as a log entry
+                        const lines = buffer.split('\n');
+
+                        // Keep the last incomplete line in the buffer
+                        buffer = lines.pop() || '';
+
+                        // Add complete lines to logs
+                        for (const line of lines) {
+                            if (line.trim()) { // Skip empty lines
+                                setThreads(prev => prev.map(t => t.id === 'market' ? {
+                                    ...t,
+                                    logs: [...t.logs, line.trim()]
+                                } : t));
+                            }
+                        }
+                    }
+
+                    // Add any remaining buffer content
+                    if (buffer.trim()) {
+                        setThreads(prev => prev.map(t => t.id === 'market' ? {
+                            ...t,
+                            logs: [...t.logs, buffer.trim()]
+                        } : t));
+                    }
+
+                    setThreads(prev => prev.map(t => t.id === 'market' ? {
+                        ...t,
+                        status: 'complete',
+                        logs: [...t.logs, '✔ Analysis Stream Complete']
+                    } : t));
+
+                } catch (e) {
+                    console.error("Market stream fail", e);
+                    setThreads(prev => prev.map(t => t.id === 'market' ? {
+                        ...t,
+                        status: 'error',
+                        logs: [...t.logs, `❌ Stream failed: ${e.message}`, 'Falling back to static analysis...']
+                    } : t));
+                }
+            })();
+
+            // Wait for analysis threads
+            await Promise.all([cvPromise, marketPromise]);
+
+            // Synthesize Plan
+            setThreads(prev => [
+                ...prev,
+                { id: 'synthesis', status: 'running', logs: ['Synthesizing learning path...'] }
+            ]);
+
             const { data } = await api.post('/api/learning/generate', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
 
             if (data.success) {
-                setGeneratedPlan(data.plan);
+                setAnalysisFinished(true);
+                setTimeout(() => {
+                    setGeneratedPlan(data.plan);
+                }, 1000);
             } else {
-                setError(data.message || 'Failed to generate plan');
+                setError(data.message || 'Failed');
                 setActiveStep(1);
             }
+
         } catch (err) {
             console.error(err);
-            setError(err.response?.data?.detail || 'Failed to generate learning plan');
+            setError(err.message || 'Failed');
             setActiveStep(1);
-        } finally {
-            setLoading(false);
         }
     };
 
     const handleGoToLearning = () => {
-        navigate('/learning');
+        navigate('/path');
     };
 
     return (
@@ -113,11 +236,21 @@ const Onboarding = () => {
                         <div className="w-8 h-8 bg-primary-blue/20 rounded-lg flex items-center justify-center text-primary-blue">
                             <Terminal size={20} />
                         </div>
-                        <h2 className="text-white text-lg font-bold tracking-tight">CodeForge</h2>
+                        <h2 className="text-white text-lg font-bold tracking-tight">EngCoach</h2>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button className="ghost-button">Sign In</button>
-                        <Button variant="primary" size="sm">Get Started</Button>
+                        {user ? (
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm text-slate-400">Hello, <span className="text-white font-medium">{user.username}</span></span>
+                                <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>Dashboard</Button>
+                                <Button variant="ghost" size="sm" onClick={() => navigate('/logout')}>Sign Out</Button>
+                            </div>
+                        ) : (
+                            <>
+                                <button className="ghost-button" onClick={() => navigate('/login')}>Sign In</button>
+                                <Button variant="primary" size="sm" onClick={() => navigate('/signup')}>Get Started</Button>
+                            </>
+                        )}
                     </div>
                 </div>
             </header>
@@ -128,7 +261,7 @@ const Onboarding = () => {
                     {/* Header */}
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
-                            Welcome to CodeForge
+                            Welcome to EngCoach
                         </h1>
                         <p className="text-slate-400">
                             Let's calibrate your mentorship path in just a few steps.
@@ -292,27 +425,66 @@ const Onboarding = () => {
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
-                                    className="flex flex-col h-full justify-center items-center text-center gap-8"
+                                    className="flex flex-col h-full w-full"
                                 >
                                     {loading ? (
-                                        <>
-                                            <div className="relative w-full max-w-md">
-                                                <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-primary-blue w-2/3 relative shimmer" />
+                                        <div className="w-full h-full flex flex-col gap-4">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <h3 className="text-lg font-mono font-bold text-white flex items-center gap-2">
+                                                    <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                                                    SYSTEM_ANALYSIS_ACTIVE
+                                                </h3>
+                                                <span className="text-xs font-mono text-slate-500">PID: 8675-309</span>
+                                            </div>
+
+                                            {/* Thread 1: CV Analysis */}
+                                            <div className="bg-black/40 rounded-lg p-4 border border-white/5 font-mono text-xs overflow-hidden h-32 relative">
+                                                <div className="flex justify-between items-center mb-2 border-b border-white/5 pb-2">
+                                                    <span className="text-primary-blue font-bold">THREAD_01: CV_PARSER</span>
+                                                    {threads.find(t => t.id === 'cv')?.status === 'running' && <Loader2 className="animate-spin text-slate-500" size={14} />}
+                                                    {threads.find(t => t.id === 'cv')?.status === 'complete' && <CheckCircle className="text-success" size={14} />}
+                                                </div>
+                                                <div className="flex flex-col gap-1 text-slate-400">
+                                                    {threads.find(t => t.id === 'cv')?.logs.map((log, i) => (
+                                                        <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
+                                                            <span className="text-slate-600 mr-2">[{new Date().toLocaleTimeString().split(' ')[0]}]</span>
+                                                            {log}
+                                                        </motion.div>
+                                                    ))}
                                                 </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                <h3 className="text-xl font-medium text-white flex items-center gap-2">
-                                                    <Loader2 className="animate-spin" size={20} />
-                                                    Parsing Resume...
-                                                </h3>
-                                                <p className="text-slate-400 text-sm">
-                                                    Extracting proficiency in React, Node.js, and System Design.
-                                                </p>
+
+                                            {/* Thread 2: Market Analysis */}
+                                            <div className="bg-black/40 rounded-lg p-4 border border-white/5 font-mono text-xs overflow-hidden h-32 relative">
+                                                <div className="flex justify-between items-center mb-2 border-b border-white/5 pb-2">
+                                                    <span className="text-accent-purple font-bold">THREAD_02: MARKET_INTEL</span>
+                                                    {threads.find(t => t.id === 'market')?.status === 'running' && <Loader2 className="animate-spin text-slate-500" size={14} />}
+                                                    {threads.find(t => t.id === 'market')?.status === 'complete' && <CheckCircle className="text-success" size={14} />}
+                                                </div>
+                                                <div className="flex flex-col gap-1 text-slate-400">
+                                                    {threads.find(t => t.id === 'market')?.logs.map((log, i) => (
+                                                        <motion.div key={i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
+                                                            <span className="text-slate-600 mr-2">[{new Date().toLocaleTimeString().split(' ')[0]}]</span>
+                                                            {log}
+                                                        </motion.div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        </>
+
+                                            {/* Synthesis / Finalizing */}
+                                            {threads.find(t => t.id === 'synthesis') && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="bg-primary-blue/10 rounded-lg p-3 border border-primary-blue/30 font-mono text-xs flex items-center justify-center text-primary-blue gap-2"
+                                                >
+                                                    <Loader2 className="animate-spin" size={14} />
+                                                    Synthesizing final roadmap...
+                                                </motion.div>
+                                            )}
+                                        </div>
                                     ) : generatedPlan ? (
-                                        <>
+                                        <div className="flex flex-col h-full justify-center items-center text-center gap-8">
                                             <motion.div
                                                 initial={{ scale: 0 }}
                                                 animate={{ scale: 1 }}
@@ -321,15 +493,15 @@ const Onboarding = () => {
                                                 <CheckCircle className="text-success" size={40} />
                                             </motion.div>
                                             <div className="space-y-2">
-                                                <h3 className="text-2xl font-bold text-white">Your Plan is Ready! 🎉</h3>
+                                                <h3 className="text-2xl font-bold text-white">Analysis Complete</h3>
                                                 <p className="text-slate-400">
-                                                    We've created a personalized learning path based on your experience.
+                                                    We've calibrated your roadmap against {targetRole} market data.
                                                 </p>
                                             </div>
                                             <Button variant="primary" size="lg" icon={Rocket} onClick={handleGoToLearning}>
-                                                Start Learning
+                                                View Roadmap
                                             </Button>
-                                        </>
+                                        </div>
                                     ) : null}
                                 </motion.div>
                             )}

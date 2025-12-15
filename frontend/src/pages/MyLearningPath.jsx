@@ -121,10 +121,19 @@ const MyLearningPath = () => {
 
                 {/* Nav Items */}
                 <nav className="flex flex-col gap-6 w-full items-center">
-                    <button className="p-3 rounded-xl bg-primary-blue/10 text-primary-blue transition-all hover:bg-primary-blue/20 group relative">
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="p-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group relative"
+                    >
                         <Home size={20} />
                         <span className="absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 z-50">
-                            Home
+                            Dashboard
+                        </span>
+                    </button>
+                    <button className="p-3 rounded-xl bg-primary-blue/10 text-primary-blue transition-all hover:bg-primary-blue/20 group relative">
+                        <Sparkles size={20} />
+                        <span className="absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 z-50">
+                            Learning Path
                         </span>
                     </button>
                     <button className="p-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group relative">

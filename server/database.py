@@ -1,10 +1,16 @@
+"""
+EngCoach Database Schema
+
+Provides database connection and table creation for the EngCoach platform.
+"""
+
 import sqlite3
 import json
 from pathlib import Path
 
 def get_db_connection():
     """Establishes a connection to the SQLite database."""
-    db_path = Path(__file__).parent / "data" / "hr_agent.db"
+    db_path = Path(__file__).parent / "data" / "engcoach.db"
     db_path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -15,121 +21,55 @@ def create_tables():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # User table
+    # Users table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
         email TEXT,
+        password TEXT NOT NULL,
         first_name TEXT,
         last_name TEXT,
-        role TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'candidate',
         avatar_url TEXT,
         created_at TEXT NOT NULL
     )
     """)
 
-    # Migration: Add avatar_url if it doesn't exist
-    try:
-        cursor.execute("ALTER TABLE users ADD COLUMN avatar_url TEXT")
-    except sqlite3.OperationalError:
-        pass # Column likely already exists
-    
-    # Migration: Add first_name and last_name if they don't exist
-    try:
-        cursor.execute("ALTER TABLE users ADD COLUMN first_name TEXT")
-    except sqlite3.OperationalError:
-        pass
-    
-    try:
-        cursor.execute("ALTER TABLE users ADD COLUMN last_name TEXT")
-    except sqlite3.OperationalError:
-        pass
-
-
-    # Interviews table
+    # Learning Tracks table (dynamic curriculum for any role)
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS interviews (
+    CREATE TABLE IF NOT EXISTS learning_tracks (
         id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        description TEXT,
-        config TEXT,
-        allowed_candidate_ids TEXT,
-        deadline TEXT,
-        active BOOLEAN NOT NULL,
-        ai_recommendation TEXT
-    )
-    """)
-
-    # Migration: Add ai_recommendation if it doesn't exist
-    try:
-        cursor.execute("ALTER TABLE interviews ADD COLUMN ai_recommendation TEXT")
-    except sqlite3.OperationalError:
-        pass  # Column likely already exists
-
-
-    # Results table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS results (
-        id TEXT PRIMARY KEY,
-        session_id TEXT UNIQUE NOT NULL,
-        interview_id TEXT,
-        candidate_id TEXT,
-        candidate_username TEXT,
-        interview_title TEXT,
-        timestamp TEXT,
-        answers TEXT,
-        feedback TEXT,
-        scores TEXT,
-        summary TEXT,
+        user_id TEXT NOT NULL,
+        target_role TEXT NOT NULL,
+        cv_summary TEXT,
+        curriculum_json TEXT,
         created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        status TEXT
+        updated_at TEXT,
+        FOREIGN KEY (user_id) REFERENCES users (id)
     )
     """)
 
-    # Learning Plans table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS learning_plans (
-        user_id TEXT PRIMARY KEY,
-        target_role TEXT,
-        curriculum TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT
-    )
-    """)
-
-    # Practice Sessions table (updated for Coaching/Interview modes)
+    # Practice Sessions table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS practice_sessions (
-        session_id TEXT PRIMARY KEY,
+        id TEXT PRIMARY KEY,
+        track_id TEXT NOT NULL,
         user_id TEXT NOT NULL,
-        module_id TEXT,
+        module_topic TEXT,
         mode TEXT DEFAULT 'coaching',
+        chat_history TEXT,
         code_snapshot TEXT,
-        diagram_path TEXT,
+        whiteboard_snapshot TEXT,
         started_at TEXT,
         time_limit_minutes INTEGER,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (track_id) REFERENCES learning_tracks (id),
+        FOREIGN KEY (user_id) REFERENCES users (id)
     )
     """)
 
-    # Migrations for practice_sessions
-    try:
-        cursor.execute("ALTER TABLE practice_sessions ADD COLUMN mode TEXT DEFAULT 'coaching'")
-    except sqlite3.OperationalError:
-        pass
-    try:
-        cursor.execute("ALTER TABLE practice_sessions ADD COLUMN started_at TEXT")
-    except sqlite3.OperationalError:
-        pass
-    try:
-        cursor.execute("ALTER TABLE practice_sessions ADD COLUMN time_limit_minutes INTEGER")
-    except sqlite3.OperationalError:
-        pass
-
-    # Chat Messages table (updated with context snapshot)
+    # Chat Messages table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS chat_messages (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -138,44 +78,31 @@ def create_tables():
         content TEXT NOT NULL,
         context_snapshot TEXT,
         timestamp TEXT NOT NULL,
-        FOREIGN KEY (session_id) REFERENCES practice_sessions (session_id)
+        FOREIGN KEY (session_id) REFERENCES practice_sessions (id)
     )
     """)
 
-    # Migration for chat_messages
-    try:
-        cursor.execute("ALTER TABLE chat_messages ADD COLUMN context_snapshot TEXT")
-    except sqlite3.OperationalError:
-        pass
-
-    # Submissions table (updated for interview grading)
+    # Submissions table (graded results)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS submissions (
         id TEXT PRIMARY KEY,
         session_id TEXT NOT NULL,
         mode TEXT DEFAULT 'coaching',
         final_code TEXT,
-        final_diagram_path TEXT,
+        final_whiteboard TEXT,
         ai_grade TEXT,
-        interview_result TEXT,
+        strengths TEXT,
+        weaknesses TEXT,
+        next_steps TEXT,
+        score INTEGER,
         created_at TEXT NOT NULL,
-        FOREIGN KEY (session_id) REFERENCES practice_sessions (session_id)
+        FOREIGN KEY (session_id) REFERENCES practice_sessions (id)
     )
     """)
-
-    # Migrations for submissions
-    try:
-        cursor.execute("ALTER TABLE submissions ADD COLUMN mode TEXT DEFAULT 'coaching'")
-    except sqlite3.OperationalError:
-        pass
-    try:
-        cursor.execute("ALTER TABLE submissions ADD COLUMN interview_result TEXT")
-    except sqlite3.OperationalError:
-        pass
 
     conn.commit()
     conn.close()
 
 if __name__ == "__main__":
     create_tables()
-    print("Database tables created successfully.")
+    print("EngCoach database tables created successfully.")

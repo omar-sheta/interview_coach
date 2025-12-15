@@ -937,3 +937,23 @@ CONTENT:
 2025-12-14 18:36:31,302 - watchfiles.main - INFO - 338 changes detected
 2025-12-14 18:36:33,251 - watchfiles.main - INFO - 341 changes detected
 2025-12-14 18:36:34,679 - watchfiles.main - INFO - 340 changes detected
+2025-12-14 21:23:58,073 - primp - INFO - response: https://www.bing.com/search?q=llm+researcher+at+google+key+technical+skills+requirements+2025 200
+2025-12-14 21:26:16,216 - primp - INFO - response: https://www.bing.com/search?q=llm+researcher+skills+requirements+2025 200
+2025-12-14 21:26:17,135 - primp - INFO - response: https://www.bing.com/search?q=llm+researcher+job+description 200
+2025-12-14 21:26:18,125 - primp - INFO - response: https://www.bing.com/search?q=senior+llm+researcher+skills 200
+2025-12-14 21:29:28,628 - primp - INFO - response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=llm%20researcher%20skills%20requirements%202025 200
+2025-12-14 21:29:29,326 - httpx - INFO - HTTP Request: POST https://html.duckduckgo.com/html/ "HTTP/2 200 OK"
+2025-12-14 21:29:29,430 - primp - INFO - response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=llm%20researcher%20job%20description 200
+2025-12-14 21:29:30,813 - primp - INFO - response: https://www.mojeek.com/search?q=llm+researcher+job+description 200
+2025-12-14 21:32:42,270 - primp - INFO - response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=llm%20researcher%20skills%20requirements%202025 200
+2025-12-14 21:32:43,437 - primp - INFO - response: https://www.mojeek.com/search?q=llm+researcher+skills+requirements+2025 200
+2025-12-14 21:32:43,630 - primp - INFO - response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=llm%20researcher%20job%20description 200
+2025-12-14 21:32:44,529 - httpx - INFO - HTTP Request: POST https://html.duckduckgo.com/html/ "HTTP/2 200 OK"
+2025-12-14 21:35:25,528 - primp - INFO - response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=llm%20researcher%20skills%20requirements%202025 200
+2025-12-14 21:35:26,211 - primp - INFO - response: https://search.brave.com/search?q=llm+researcher+skills+requirements+2025&source=web 200
+2025-12-14 21:35:26,284 - primp - INFO - response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=llm%20researcher%20job%20description 200
+2025-12-14 21:35:27,176 - primp - INFO - response: https://yandex.com/search/site/?text=llm+researcher+job+description&web=1&searchid=2453425 200
+2025-12-14 21:40:30,088 - primp - INFO - response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=llm%20researcher%20skills%20requirements%202025 200
+2025-12-14 21:40:30,707 - primp - INFO - response: https://yandex.com/search/site/?text=llm+researcher+skills+requirements+2025&web=1&searchid=3503092 200
+2025-12-14 21:40:30,822 - primp - INFO - response: https://en.wikipedia.org/w/api.php?action=opensearch&profile=fuzzy&limit=1&search=llm%20researcher%20job%20description 200
+2025-12-14 21:40:32,048 - primp - INFO - response: https://search.brave.com/search?q=llm+researcher+job+description&source=web 200

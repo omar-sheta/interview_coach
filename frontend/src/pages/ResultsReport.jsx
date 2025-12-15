@@ -87,7 +87,7 @@ const ResultsReport = () => {
                     <AlertTriangle className="w-16 h-16 text-danger mx-auto mb-4" />
                     <h2 className="text-xl font-bold text-white mb-2">Unable to Load Results</h2>
                     <p className="text-slate-400 mb-4">{error}</p>
-                    <Button variant="primary" onClick={() => navigate('/learning')}>
+                    <Button variant="primary" onClick={() => navigate('/path')}>
                         Back to Dashboard
                     </Button>
                 </GlassCard>
@@ -106,7 +106,7 @@ const ResultsReport = () => {
                         <div className="flex w-8 h-8 items-center justify-center rounded bg-primary-blue/20 text-primary-blue shadow-[0_0_15px_rgba(59,130,246,0.3)]">
                             <Terminal size={18} />
                         </div>
-                        <h2 className="text-lg font-bold tracking-tight">CodeForge</h2>
+                        <h2 className="text-lg font-bold tracking-tight">EngCoach</h2>
                     </div>
                     <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
                         <a className="hover:text-white transition-colors cursor-pointer">Dashboard</a>
@@ -124,7 +124,7 @@ const ResultsReport = () => {
                 {/* Breadcrumbs & Heading */}
                 <div className="flex flex-col gap-1 mb-10">
                     <button
-                        onClick={() => navigate('/learning')}
+                        onClick={() => navigate('/path')}
                         className="flex items-center gap-2 text-xs font-medium text-primary-blue mb-2 hover:text-blue-400 transition-colors"
                     >
                         <ArrowLeft size={14} />
@@ -297,7 +297,7 @@ const ResultsReport = () => {
                             fullWidth
                             icon={ArrowRight}
                             iconPosition="right"
-                            onClick={() => navigate('/learning')}
+                            onClick={() => navigate('/path')}
                         >
                             Start Next Lesson
                         </Button>
@@ -308,7 +308,7 @@ const ResultsReport = () => {
             {/* Footer */}
             <footer className="w-full border-t border-white/5 bg-bg-dark py-8 mt-auto">
                 <div className="mx-auto max-w-[1200px] px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
-                    <p>© 2024 CodeForge Inc. All rights reserved.</p>
+                    <p>© 2024 EngCoach Inc. All rights reserved.</p>
                     <div className="flex gap-6">
                         <a className="hover:text-slate-300 transition-colors cursor-pointer">Privacy Policy</a>
                         <a className="hover:text-slate-300 transition-colors cursor-pointer">Terms of Service</a>

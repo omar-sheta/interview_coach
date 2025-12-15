@@ -25,7 +25,7 @@ const LoginPage = () => {
     }
     try {
       const user = await login(form.username, form.password);
-      navigate(user.role === 'admin' ? '/admin' : '/learning');
+      navigate(user.role === 'admin' ? '/admin' : '/path');
     } catch (err) {
       setError(err.message || 'Unable to login. Please check your credentials.');
     }
@@ -58,7 +58,7 @@ const LoginPage = () => {
             <div className="w-12 h-12 bg-primary-blue/20 rounded-xl flex items-center justify-center border border-primary-blue/30 shadow-[0_0_20px_rgba(59,130,246,0.3)] mb-4">
               <Terminal className="w-6 h-6 text-primary-blue" />
             </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">CodeForge</h1>
+            <h1 className="text-2xl font-bold text-white tracking-tight">EngCoach</h1>
           </motion.div>
 
           {/* Header */}
@@ -82,7 +82,7 @@ const LoginPage = () => {
                   value={form.username}
                   onChange={handleChange}
                   disabled={isLoading}
-                  placeholder="engineer@codeforge.dev"
+                  placeholder="engineer@engcoach.dev"
                   className="glass-input pl-11"
                   autoComplete="username"
                   autoFocus

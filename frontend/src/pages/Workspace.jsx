@@ -205,7 +205,7 @@ const Workspace = () => {
                     <div className="w-8 h-8 bg-primary-blue rounded-lg flex items-center justify-center">
                         <Terminal size={18} className="text-white" />
                     </div>
-                    <span className="font-bold text-white tracking-tight">CodeForge</span>
+                    <span className="font-bold text-white tracking-tight">EngCoach</span>
                     <span className="text-xs px-2 py-0.5 rounded bg-primary-blue/10 text-primary-blue font-medium border border-primary-blue/20">
                         Pro
                     </span>
@@ -410,7 +410,7 @@ const Workspace = () => {
                                 </div>
                             </div>
                             <div className="p-3 font-mono text-xs text-slate-300 overflow-y-auto">
-                                <p className="text-slate-500">user@codeforge:~/practice$ python solution.py</p>
+                                <p className="text-slate-500">user@engcoach:~/practice$ python solution.py</p>
                                 <p className="mt-1 text-success">Ready to run your code...</p>
                                 <div className="flex items-center gap-1 mt-1">
                                     <span className="text-success">➜</span>
