@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-multipart
+requests
+pydantic>=2.7,<3
+kokoro>=0.19
+onnxruntime>=1.17.0
+mlx>=0.15.0
+mlx-lm>=0.20.0
+mlx-vlm>=0.1.0
+mlx-whisper>=0.1.0
+huggingface_hub>=0.24.0
+pypdf>=4.0.0
