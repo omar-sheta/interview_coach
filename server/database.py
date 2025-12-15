@@ -89,33 +89,89 @@ def create_tables():
     )
     """)
 
-    # Learning Plans table (for Guided Learning)
+    # Learning Plans table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS learning_plans (
         user_id TEXT PRIMARY KEY,
         target_role TEXT,
         curriculum TEXT,
-        progress TEXT,
         created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
+        updated_at TEXT
     )
     """)
 
-    # Practice Submissions table (for Guided Learning)
+    # Practice Sessions table (updated for Coaching/Interview modes)
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS practice_submissions (
-        id TEXT PRIMARY KEY,
+    CREATE TABLE IF NOT EXISTS practice_sessions (
+        session_id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
-        session_id TEXT,
         module_id TEXT,
-        question_text TEXT,
-        user_text_answer TEXT,
-        user_file_path TEXT,
-        ai_feedback TEXT,
-        score INTEGER,
+        mode TEXT DEFAULT 'coaching',
+        code_snapshot TEXT,
+        diagram_path TEXT,
+        started_at TEXT,
+        time_limit_minutes INTEGER,
         created_at TEXT NOT NULL
     )
     """)
+
+    # Migrations for practice_sessions
+    try:
+        cursor.execute("ALTER TABLE practice_sessions ADD COLUMN mode TEXT DEFAULT 'coaching'")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE practice_sessions ADD COLUMN started_at TEXT")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE practice_sessions ADD COLUMN time_limit_minutes INTEGER")
+    except sqlite3.OperationalError:
+        pass
+
+    # Chat Messages table (updated with context snapshot)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS chat_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id TEXT NOT NULL,
+        role TEXT NOT NULL,
+        content TEXT NOT NULL,
+        context_snapshot TEXT,
+        timestamp TEXT NOT NULL,
+        FOREIGN KEY (session_id) REFERENCES practice_sessions (session_id)
+    )
+    """)
+
+    # Migration for chat_messages
+    try:
+        cursor.execute("ALTER TABLE chat_messages ADD COLUMN context_snapshot TEXT")
+    except sqlite3.OperationalError:
+        pass
+
+    # Submissions table (updated for interview grading)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS submissions (
+        id TEXT PRIMARY KEY,
+        session_id TEXT NOT NULL,
+        mode TEXT DEFAULT 'coaching',
+        final_code TEXT,
+        final_diagram_path TEXT,
+        ai_grade TEXT,
+        interview_result TEXT,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (session_id) REFERENCES practice_sessions (session_id)
+    )
+    """)
+
+    # Migrations for submissions
+    try:
+        cursor.execute("ALTER TABLE submissions ADD COLUMN mode TEXT DEFAULT 'coaching'")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        cursor.execute("ALTER TABLE submissions ADD COLUMN interview_result TEXT")
+    except sqlite3.OperationalError:
+        pass
 
     conn.commit()
     conn.close()

@@ -591,6 +591,7 @@ class DataManager:
                 continue
 
     # Learning Plans --------------------------------------------------------
+    # Learning Plans --------------------------------------------------------
     def create_learning_plan(self, user_id: str, target_role: str, curriculum: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new learning plan for a user."""
         conn = get_db_connection()
@@ -601,18 +602,17 @@ class DataManager:
             "user_id": user_id,
             "target_role": target_role,
             "curriculum": curriculum,
-            "progress": {},
             "created_at": now,
-            "updated_at": now
+            "updated_at": now,
         }
         
         cursor.execute(
             """
             INSERT OR REPLACE INTO learning_plans 
-            (user_id, target_role, curriculum, progress, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?)
+            (user_id, target_role, curriculum, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?)
             """,
-            (user_id, target_role, json.dumps(curriculum), json.dumps({}), now, now)
+            (user_id, target_role, json.dumps(curriculum), now, now)
         )
         conn.commit()
         conn.close()
@@ -636,97 +636,135 @@ class DataManager:
             plan['curriculum'] = json.loads(plan['curriculum']) if plan.get('curriculum') else {}
         except (json.JSONDecodeError, TypeError):
             plan['curriculum'] = {}
-        try:
-            plan['progress'] = json.loads(plan['progress']) if plan.get('progress') else {}
-        except (json.JSONDecodeError, TypeError):
-            plan['progress'] = {}
         
         return plan
-    
-    def update_learning_plan_progress(self, user_id: str, progress: Dict[str, Any]) -> bool:
-        """Update the progress JSON for a learning plan."""
+
+    # Mentorship Platform Methods -------------------------------------------
+    def create_practice_session(
+        self, 
+        user_id: str, 
+        module_id: str, 
+        mode: str = "coaching",
+        time_limit_minutes: Optional[int] = None,
+        question_text: Optional[str] = None,
+        target_role: Optional[str] = None
+    ) -> str:
+        """Create a new practice session with mode support."""
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        session_id = str(uuid.uuid4())
+        now = datetime.now().isoformat()
+        started_at = now if mode == "interview" else None
+        
+        # Store question context as JSON in code_snapshot for now
+        context = json.dumps({
+            "question_text": question_text,
+            "target_role": target_role
+        }) if question_text else None
+        
+        cursor.execute(
+            """
+            INSERT INTO practice_sessions 
+            (session_id, user_id, module_id, mode, started_at, time_limit_minutes, code_snapshot, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (session_id, user_id, module_id, mode, started_at, time_limit_minutes, context, now)
+        )
+        conn.commit()
+        conn.close()
+        return session_id
+
+    def get_session(self, session_id: str) -> Optional[Dict[str, Any]]:
+        """Get a practice session by ID."""
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM practice_sessions WHERE session_id = ?", (session_id,))
+        row = cursor.fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def save_chat_message(
+        self, 
+        session_id: str, 
+        role: str, 
+        content: str,
+        context_snapshot: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Save a chat message with optional context snapshot."""
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        timestamp = datetime.now().isoformat()
+        context_json = json.dumps(context_snapshot) if context_snapshot else None
+        
+        cursor.execute(
+            """
+            INSERT INTO chat_messages (session_id, role, content, context_snapshot, timestamp)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (session_id, role, content, context_json, timestamp)
+        )
+        conn.commit()
+        conn.close()
+        return {
+            "session_id": session_id, 
+            "role": role, 
+            "content": content, 
+            "context_snapshot": context_snapshot,
+            "timestamp": timestamp
+        }
+
+    def get_session_history(self, session_id: str) -> List[Dict[str, Any]]:
+        """Get chat history for a session."""
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "UPDATE learning_plans SET progress = ?, updated_at = ? WHERE user_id = ?",
-            (json.dumps(progress), datetime.now().isoformat(), user_id)
+            "SELECT role, content, context_snapshot, timestamp FROM chat_messages WHERE session_id = ? ORDER BY id ASC",
+            (session_id,)
         )
-        updated = cursor.rowcount > 0
-        conn.commit()
+        history = []
+        for row in cursor.fetchall():
+            msg = dict(row)
+            if msg.get('context_snapshot'):
+                try:
+                    msg['context_snapshot'] = json.loads(msg['context_snapshot'])
+                except:
+                    pass
+            history.append(msg)
         conn.close()
-        return updated
+        return history
 
-    # Practice Submissions --------------------------------------------------
-    def submit_practice_answer(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Store a practice submission."""
+    def submit_practice_result(
+        self, 
+        session_id: str, 
+        final_code: str, 
+        ai_grade: Dict[str, Any], 
+        final_diagram_path: Optional[str] = None,
+        mode: str = "coaching",
+        interview_result: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Save the final submission result with mode-specific grading."""
         conn = get_db_connection()
         cursor = conn.cursor()
         
         submission_id = str(uuid.uuid4())
         now = datetime.now().isoformat()
-        
-        submission = {
-            "id": submission_id,
-            "user_id": data.get("user_id"),
-            "session_id": data.get("session_id"),
-            "module_id": data.get("module_id"),
-            "question_text": data.get("question_text"),
-            "user_text_answer": data.get("user_text_answer"),
-            "user_file_path": data.get("user_file_path"),
-            "ai_feedback": data.get("ai_feedback"),
-            "score": data.get("score"),
-            "created_at": now
-        }
+        interview_result_json = json.dumps(interview_result) if interview_result else None
         
         cursor.execute(
             """
-            INSERT INTO practice_submissions 
-            (id, user_id, session_id, module_id, question_text, user_text_answer, user_file_path, ai_feedback, score, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO submissions 
+            (id, session_id, mode, final_code, final_diagram_path, ai_grade, interview_result, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (
-                submission["id"],
-                submission["user_id"],
-                submission["session_id"],
-                submission["module_id"],
-                submission["question_text"],
-                submission["user_text_answer"],
-                submission["user_file_path"],
-                json.dumps(submission["ai_feedback"]) if submission["ai_feedback"] else None,
-                submission["score"],
-                submission["created_at"]
-            )
+            (submission_id, session_id, mode, final_code, final_diagram_path, json.dumps(ai_grade), interview_result_json, now)
         )
         conn.commit()
         conn.close()
-        
-        print(f"📝 Stored practice submission {submission_id}")
-        return submission
-    
-    def get_submissions_for_module(self, user_id: str, module_id: str) -> List[Dict[str, Any]]:
-        """Get all submissions for a specific module."""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT * FROM practice_submissions WHERE user_id = ? AND module_id = ? ORDER BY created_at DESC",
-            (user_id, module_id)
-        )
-        submissions = [dict(row) for row in cursor.fetchall()]
-        conn.close()
-        return submissions
-    
-    def get_user_submissions(self, user_id: str) -> List[Dict[str, Any]]:
-        """Get all submissions for a user."""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT * FROM practice_submissions WHERE user_id = ? ORDER BY created_at DESC",
-            (user_id,)
-        )
-        submissions = [dict(row) for row in cursor.fetchall()]
-        conn.close()
-        return submissions
+        return {"id": submission_id, "session_id": session_id, "mode": mode, "grade": ai_grade, "interview_result": interview_result}
 
 
 # Global instance
 data_manager = DataManager()
+

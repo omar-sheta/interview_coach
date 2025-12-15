@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeForge Login</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3c83f6",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#101722",
+                        "card-dark": "#182334",
+                        "border-dark": "#2a3b55",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>/* Custom noise texture for that premium developer feel */
+.bg-noise {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuA0gCwNkbeVvl38B07KKEBGkmXXLO87LeaAbwiLNeSrtwSCDEuRV5tzji93KW5RryL7xDvwynBJrD1BFr-ogzixQ9OLFVMdWXsf8n6yXXinsADWsXeRtKpqp_dvVpmrDOXLWf2dNspab8oZxN7zXk8ksqidAEDn6ijutSsSzoT5Du1usKCGilk6Q2kgk4LFBI_xtGOygbA7oQZHRKlX5YxWP_YtaXum6XiDvRSy-XGHcs-JKGC60bSGG-m0KMgymziboLB4ZO9McQ)
+    }</style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-white antialiased overflow-hidden">
+<!-- Background Effects -->
+<div class="fixed inset-0 z-0 pointer-events-none">
+<!-- Abstract gradient background -->
+<div class="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px]" data-alt="Soft blue gradient glow in top left corner"></div>
+<div class="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-500/10 blur-[120px]" data-alt="Soft purple gradient glow in bottom right corner"></div>
+<div class="absolute inset-0 bg-noise opacity-30 mix-blend-overlay"></div>
+</div>
+<div class="relative z-10 flex min-h-screen w-full flex-col items-center justify-center p-4">
+<!-- Auth Card -->
+<div class="w-full max-w-[440px] flex flex-col gap-6">
+<!-- Header Section -->
+<div class="flex flex-col items-center gap-6 mb-2">
+<!-- Logo -->
+<div class="flex items-center gap-3">
+<div class="size-10 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/20 shadow-[0_0_15px_rgba(60,131,246,0.3)]">
+<svg class="size-6 text-primary" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6_330)">
+<path clip-rule="evenodd" d="M24 0.757355L47.2426 24L24 47.2426L0.757355 24L24 0.757355ZM21 35.7574V12.2426L9.24264 24L21 35.7574Z" fill="currentColor" fill-rule="evenodd"></path>
+</g>
+<defs>
+<clippath id="clip0_6_330"><rect fill="white" height="48" width="48"></rect></clippath>
+</defs>
+</svg>
+</div>
+<h1 class="text-2xl font-bold tracking-tight text-white">CodeForge</h1>
+</div>
+</div>
+<!-- Glassmorphism Card -->
+<div class="flex flex-col rounded-2xl border border-border-dark bg-[#141d2c]/80 backdrop-blur-md shadow-2xl p-8">
+<div class="mb-8 text-center">
+<h2 class="text-xl font-semibold text-white mb-2">Welcome back</h2>
+<p class="text-sm text-slate-400">Enter your credentials to access the forge.</p>
+</div>
+<!-- Inputs -->
+<form class="flex flex-col gap-5" onsubmit="event.preventDefault()">
+<!-- Email Field -->
+<div class="flex flex-col gap-2">
+<label class="text-sm font-medium text-slate-300 ml-1">Email Address</label>
+<div class="relative group">
+<div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 transition-colors group-focus-within:text-primary">
+<span class="material-symbols-outlined text-[20px]">mail</span>
+</div>
+<input class="w-full bg-[#0d121c] border border-border-dark rounded-xl h-11 pl-10 pr-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200" placeholder="engineer@codeforge.dev" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between ml-1">
+<label class="text-sm font-medium text-slate-300">Password</label>
+<a class="text-xs font-medium text-primary hover:text-blue-400 transition-colors" href="#">Forgot password?</a>
+</div>
+<div class="relative group">
+<div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 transition-colors group-focus-within:text-primary">
+<span class="material-symbols-outlined text-[20px]">lock</span>
+</div>
+<input class="w-full bg-[#0d121c] border border-border-dark rounded-xl h-11 pl-10 pr-4 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200" placeholder="••••••••••••" type="password"/>
+</div>
+</div>
+<!-- Login Button -->
+<button class="mt-2 w-full bg-primary hover:bg-blue-600 active:scale-[0.98] transition-all h-11 rounded-xl text-sm font-bold text-white shadow-[0_0_20px_rgba(60,131,246,0.3)] hover:shadow-[0_0_25px_rgba(60,131,246,0.5)]">
+                        Sign In
+                    </button>
+</form>
+<!-- Divider -->
+<div class="relative my-8">
+<div class="absolute inset-0 flex items-center">
+<div class="w-full border-t border-border-dark"></div>
+</div>
+<div class="relative flex justify-center text-xs uppercase">
+<span class="bg-[#141d2c] px-3 text-slate-500 font-medium tracking-wide">Or continue with</span>
+</div>
+</div>
+<!-- Social Buttons -->
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center justify-center gap-2 h-10 rounded-lg bg-[#1e293b] hover:bg-[#253248] border border-border-dark text-slate-200 text-sm font-medium transition-colors">
+<svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24"><path clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" fill-rule="evenodd"></path></svg>
+<span class="hidden sm:inline">GitHub</span>
+</button>
+<button class="flex items-center justify-center gap-2 h-10 rounded-lg bg-[#1e293b] hover:bg-[#253248] border border-border-dark text-slate-200 text-sm font-medium transition-colors">
+<svg aria-hidden="true" class="w-5 h-5" viewbox="0 0 24 24"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" fill="currentColor"></path></svg>
+<span class="hidden sm:inline">Google</span>
+</button>
+</div>
+</div>
+<!-- Footer -->
+<div class="text-center">
+<p class="text-sm text-slate-500">
+                    Don't have an account? 
+                    <a class="text-primary font-medium hover:text-blue-400 transition-colors ml-1" href="#">Apply for access</a>
+</p>
+</div>
+</div>
+</div>
+</body></html>

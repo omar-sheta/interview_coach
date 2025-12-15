@@ -168,6 +168,12 @@ def grade_submission(
 
 Evaluate this {question_type} answer and provide coaching feedback.
 
+**CRITICAL INSTRUCTION:**
+If the CANDIDATE'S SUBMISSION is empty, very short (e.g., "hi", "idk", "test"), or irrelevant, you MUST:
+1. Give a score of **0**.
+2. State clearly in "areas_to_improve" that the answer was insufficient.
+3. Do NOT make up strengths or assume the candidate knows concepts they didn't explicitly mention.
+
 **QUESTION:**
 {question_text}
 
@@ -176,13 +182,13 @@ Evaluate this {question_type} answer and provide coaching feedback.
 
 You MUST respond with a valid JSON object following this exact structure:
 {{
-    "score": 75,
+    "score": 0,
     "score_breakdown": {{
-        "correctness": 20,
-        "completeness": 15,
-        "clarity": 20,
-        "optimization": 10,
-        "best_practices": 10
+        "correctness": 0,
+        "completeness": 0,
+        "clarity": 0,
+        "optimization": 0,
+        "best_practices": 0
     }},
     "strengths": [
         "Strength 1",
@@ -266,6 +272,109 @@ def _create_error_grading(error_message: str) -> Dict[str, Any]:
         "ideal_solution": "Unable to generate due to service error.",
         "coaching_tips": ["Please try again later or check if the model is loaded."],
         "follow_up_question": None,
+        "error": error_message
+    }
+
+
+def grade_interview_submission(
+    question_text: str,
+    user_code: str,
+    chat_history: str,
+    vision_analysis: Optional[str] = None,
+    question_type: str = "system_design"
+) -> Dict[str, Any]:
+    """
+    Grade an interview submission and provide a hiring committee report.
+    
+    Args:
+        question_text: The interview question
+        user_code: The candidate's final code
+        chat_history: Transcript of the interview conversation
+        vision_analysis: Optional diagram/whiteboard analysis
+        question_type: Type of question
+    
+    Returns:
+        Hiring decision with level recommendation
+    """
+    
+    answer_context = f"**Candidate's Final Code:**\n```\n{user_code}\n```"
+    if vision_analysis:
+        answer_context += f"\n\n**Whiteboard/Diagram Analysis:**\n{vision_analysis}"
+    answer_context += f"\n\n**Interview Transcript:**\n{chat_history}"
+    
+    prompt = f"""You are a Hiring Committee member at a Big Tech company reviewing an interview transcript.
+
+**INTERVIEW QUESTION:**
+{question_text}
+
+**CANDIDATE'S SUBMISSION:**
+{answer_context}
+
+Based on this {question_type} interview, provide a hiring recommendation.
+
+You MUST respond with a valid JSON object following this exact structure:
+{{
+    "decision": "Hire",
+    "level": "L5 (Senior)",
+    "score": 85,
+    "pros": [
+        "Strong communication throughout",
+        "Correctly identified scaling bottleneck"
+    ],
+    "cons": [
+        "Missed the race condition edge case",
+        "Could have optimized the caching layer"
+    ],
+    "summary": "A solid performance showing senior-level skills..."
+}}
+
+Decision options: "Hire", "Lean Hire", "Lean No Hire", "No Hire"
+Level options: "L3 (Junior)", "L4 (Mid)", "L5 (Senior)", "L6 (Staff)"
+
+Evaluate based on:
+- Problem Solving (40%): Did they find a working solution?
+- Communication (25%): Did they explain their reasoning clearly?
+- Technical Depth (20%): Did they handle edge cases and optimizations?
+- Code Quality (15%): Is the code clean and maintainable?
+
+Respond ONLY with valid JSON."""
+
+    try:
+        response_text = _generate_response(prompt, max_tokens=1024)
+        
+        result = extract_json_from_response(response_text)
+        
+        if result and "decision" in result:
+            return result
+        else:
+            return _create_fallback_interview_result(response_text)
+            
+    except Exception as e:
+        print(f"❌ Interview grading error: {e}")
+        return _create_error_interview_result(str(e))
+
+
+def _create_fallback_interview_result(raw_response: str) -> Dict[str, Any]:
+    """Create fallback interview result when JSON parsing fails."""
+    return {
+        "decision": "Lean No Hire",
+        "level": "L4 (Mid)",
+        "score": 50,
+        "pros": ["Attempted the problem"],
+        "cons": ["Unable to parse structured feedback"],
+        "summary": raw_response if raw_response else "Unable to generate summary."
+    }
+
+
+def _create_error_interview_result(error_message: str) -> Dict[str, Any]:
+    """Create error interview result."""
+    return {
+        "decision": "Error",
+        "level": "N/A",
+        "score": 0,
+        "pros": [],
+        "cons": [f"Grading service error: {error_message}"],
+        "summary": "Unable to grade due to service error.",
         "error": error_message
     }
 

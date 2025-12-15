@@ -12,11 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import routers
-from server.routers import auth, candidate, ai
-from server.routers import learning, practice
-# Archived routers (kept for reference):
-# from server.routers import admin, interview
-# from server.routes import stt_router
+from server.routers import auth, learning, practice, mentor
 
 # Configure logging
 import os
@@ -52,15 +48,9 @@ app.add_middleware(
 
 # Register active routers
 app.include_router(auth.router, tags=["auth"])
-app.include_router(candidate.router, tags=["candidate"])
-app.include_router(ai.router, tags=["ai"])
 app.include_router(learning.router, tags=["learning"])
 app.include_router(practice.router, tags=["practice"])
-
-# Archived routers (commented out):
-# app.include_router(admin.router, tags=["admin"])
-# app.include_router(interview.router, tags=["interview"])
-# app.include_router(stt_router.router, tags=["stt"])
+app.include_router(mentor.router, tags=["mentor"])
 
 
 if __name__ == "__main__":

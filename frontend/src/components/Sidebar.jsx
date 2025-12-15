@@ -18,12 +18,7 @@ const Sidebar = () => {
     };
 
     const menuItems = [
-        { text: 'Dashboard', icon: <Dashboard />, path: '/admin' },
-        { text: 'Interviews', icon: <VideoCameraFront />, path: '/admin/interviews' },
-        { text: 'Candidates', icon: <Group />, path: '/admin/candidates' },
-        { text: 'Results', icon: <AssignmentTurnedIn />, path: '/admin/results' },
-        { text: 'Analytics', icon: <BarChart />, path: '/admin/analytics' },
-        { text: 'Settings', icon: <Settings />, path: '/admin/settings', disabled: true },
+        { text: 'My Learning Path', icon: <Dashboard />, path: '/dashboard' },
     ];
 
     return (
@@ -59,14 +54,14 @@ const Sidebar = () => {
                     <img src={hiveLogo} alt="Hive Logo" style={{ width: 24, height: 'auto' }} />
                 </Box>
                 <Typography variant="h6" fontWeight="bold" sx={{ letterSpacing: 0.5 }}>
-                    AI-HR Platform
+                    Interview Coach
                 </Typography>
             </Box>
 
             {/* Navigation */}
             <List sx={{ px: 2, mt: 2 }}>
                 {menuItems.map((item) => {
-                    const isActive = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
+                    const isActive = location.pathname === item.path || location.pathname.startsWith(item.path);
                     return (
                         <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
                             <ListItemButton
@@ -110,14 +105,14 @@ const Sidebar = () => {
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-                        {user?.username?.[0]?.toUpperCase() || 'A'}
+                        {user?.username?.[0]?.toUpperCase() || 'U'}
                     </Avatar>
                     <Box>
                         <Typography variant="subtitle2" fontWeight="600">
-                            {user?.username || 'Admin User'}
+                            {user?.username || 'User'}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                            Admin
+                            {user?.role || 'Candidate'}
                         </Typography>
                     </Box>
                 </Box>

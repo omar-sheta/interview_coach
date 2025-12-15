@@ -2,27 +2,23 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage.jsx';
 import SignUpPage from './pages/SignUpPage.jsx';
 import CandidateDashboard from './pages/CandidateDashboardNew.jsx';
-import AdminDashboard from './pages/AdminDashboard.jsx';
-import AdminResultsPage from './pages/AdminResultsPage.jsx';
 import WorkspacePage from './pages/WorkspacePage.jsx';
 import NotFound from './pages/NotFound.jsx';
 import LogoutPage from './pages/LogoutPage.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
-import AdminInterviews from './pages/AdminInterviews.jsx';
 import CreateInterview from './pages/CreateInterview.jsx';
 import InterviewDetail from './pages/InterviewDetail.jsx';
-import AdminCandidates from './pages/AdminCandidates.jsx';
-import AdminAnalytics from './pages/AdminAnalytics.jsx';
 import InterviewResultDetail from './pages/InterviewResultDetail.jsx';
 import CandidateDetail from './pages/CandidateDetail.jsx';
 import CandidateResultDetail from './pages/CandidateResultDetail.jsx';
 import InterviewSuccessPage from './pages/InterviewSuccessPage.jsx';
-import AdminLayout from './layouts/AdminLayout.jsx';
 
 // New Learning Platform Pages
 import MyLearningPath from './pages/MyLearningPath.jsx';
 import Onboarding from './pages/Onboarding.jsx';
 import WrittenPractice from './pages/WrittenPractice.jsx';
+import Workspace from './pages/Workspace.jsx';
+import ResultsReport from './pages/ResultsReport.jsx';
 
 function App() {
   return (
@@ -53,6 +49,22 @@ function App() {
         element={
           <ProtectedRoute allowedRoles={['candidate']}>
             <WrittenPractice />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/:moduleId"
+        element={
+          <ProtectedRoute allowedRoles={['candidate']}>
+            <Workspace />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/results/:sessionId"
+        element={
+          <ProtectedRoute allowedRoles={['candidate']}>
+            <ResultsReport />
           </ProtectedRoute>
         }
       />
@@ -107,26 +119,6 @@ function App() {
         }
       />
 
-      {/* Admin Routes */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<AdminDashboard />} />
-        <Route path="interviews" element={<AdminInterviews />} />
-        <Route path="interviews/create" element={<CreateInterview />} />
-        <Route path="interviews/:id" element={<InterviewDetail />} />
-        <Route path="candidates" element={<AdminCandidates />} />
-        <Route path="candidates/:id" element={<CandidateDetail />} />
-        <Route path="analytics" element={<AdminAnalytics />} />
-        <Route path="results" element={<AdminResultsPage />} />
-        <Route path="results/:sessionId" element={<InterviewResultDetail />} />
-      </Route>
-
       <Route path="/logout" element={<LogoutPage />} />
       <Route path="/unauthorized" element={<div>Unauthorized Access</div>} />
       <Route path="*" element={<div>Page Not Found</div>} />
@@ -135,4 +127,5 @@ function App() {
 }
 
 export default App;
+
 

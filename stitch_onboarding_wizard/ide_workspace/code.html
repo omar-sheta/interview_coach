@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CodeForge IDE</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3B82F6",
+                        "success": "#10B981", 
+                        "danger": "#EF4444",
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0F172A", // Deep Slate
+                        "panel-dark": "#1E293B",
+                        "border-dark": "rgba(255, 255, 255, 0.1)",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "mono": ["JetBrains Mono", "monospace"],
+                    },
+                    backgroundImage: {
+                        'dot-pattern': 'radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px)',
+                    },
+                    backgroundSize: {
+                        'dot-size': '20px 20px',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0F172A; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-200 overflow-hidden h-screen w-screen flex flex-col">
+<!-- Top Navigation / Header -->
+<header class="h-12 border-b border-border-dark flex items-center justify-between px-4 bg-[#0B1120] shrink-0 z-20">
+<div class="flex items-center gap-3">
+<div class="size-8 bg-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-white" style="font-size: 20px;">terminal</span>
+</div>
+<span class="font-bold text-white tracking-tight">CodeForge</span>
+<span class="text-xs px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 font-medium border border-blue-500/20">Pro</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700">
+<div class="size-2 rounded-full bg-green-500 animate-pulse"></div>
+<span class="text-xs font-medium text-slate-300">Environment Active</span>
+</div>
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-8 ring-2 ring-slate-700 cursor-pointer" data-alt="User profile avatar showing a smiling person" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCUwHM5tPEzKGbtjIDO_i4RLmExPHL6WZwUZKfbGl4dWsq_2z4m-qWxO45laTs5sTRLW-H7d9kOVw9AP1p5lipQYcd8u3rmL8ueu8DFL2LT__xNkZlmT_DY_asrUDnLASwTl818i1jToAAmQh35FiUkfkm9h4fDD9aIBMvleGzkHxDq6Vo_l9jjMC4gVXYzSi6EaGho4SF3z0LLHyl2fXz0AVc8YWFUmGNmMg0DzNBmTSCRq9pDj6VZiamIRfK3Rjh2zANpK9eavw");'></div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- Slim Sidebar Navigation -->
+<nav class="w-16 bg-[#0B1120] border-r border-border-dark flex flex-col items-center py-4 gap-6 shrink-0 z-10">
+<button class="p-2 rounded-lg bg-primary/20 text-blue-400 relative group">
+<span class="material-symbols-outlined">code</span>
+<span class="absolute left-14 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Editor</span>
+</button>
+<button class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors relative group">
+<span class="material-symbols-outlined">chat</span>
+<span class="absolute left-14 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Mentorship</span>
+</button>
+<button class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors relative group">
+<span class="material-symbols-outlined">folder_open</span>
+<span class="absolute left-14 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Files</span>
+</button>
+<button class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors relative group">
+<span class="material-symbols-outlined">extension</span>
+<span class="absolute left-14 bg-slate-800 text-xs px-2 py-1 rounded border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Extensions</span>
+</button>
+<div class="mt-auto flex flex-col gap-6">
+<button class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</nav>
+<!-- Main Workspace Grid -->
+<main class="flex-1 flex overflow-hidden">
+<!-- Column 1: The Mentor (20%) -->
+<section class="w-[20%] min-w-[300px] flex flex-col border-r border-border-dark bg-[#0F172A] relative">
+<div class="h-10 px-4 flex items-center border-b border-border-dark bg-[#1E293B]">
+<span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">school</span>
+                        The Mentor
+                    </span>
+<button class="ml-auto text-slate-400 hover:text-white">
+<span class="material-symbols-outlined text-[18px]">more_horiz</span>
+</button>
+</div>
+<!-- Chat Area -->
+<div class="flex-1 overflow-y-auto p-3 flex flex-col gap-4">
+<div class="text-center py-4">
+<p class="text-xs text-slate-500">Today, 10:23 AM</p>
+</div>
+<!-- AI Message -->
+<div class="flex items-start gap-3">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-8 shrink-0 border border-slate-600" data-alt="Abstract geometric pattern representing AI" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAcdJUv-0qchTOyZxsh1EYfkO77hhUaZ5pEILsj0FGtCnm5JudMGQzkzH3MQNp-53OlYe9bmxtmOlkRlLGaqtCj3T2kaWNxmzRVxHCQOAfLOwShFvZTICDVVr9BpHAXNS2jYACdC5rNG1DTpSqm6Ud8VzDnvmxoLncR2Ug8wjmIg1CVLy89Mlfv06o2qZdjzIIBKW-FKs9_OCHV1XUK_Ca8USq6hTDyCmxHlOuODg3n7Y5PRQAGbaWmEQ1OPqzdXR8BKkOjJ97stw");'></div>
+<div class="flex flex-col gap-1 max-w-[85%]">
+<span class="text-[11px] font-medium text-slate-400">AI Mentor</span>
+<div class="p-3 bg-slate-800 rounded-2xl rounded-tl-none border border-slate-700 text-sm leading-relaxed text-slate-200 shadow-sm">
+<p>I see you're stuck on the recursion base case. Remember to check if <code class="bg-black/30 px-1 rounded text-red-300 font-mono text-xs">n == 0</code>.</p>
+</div>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex items-start gap-3 flex-row-reverse">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-8 shrink-0 border border-blue-500/30" data-alt="User avatar small" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAirrMiu59L8gj6VSe0dgtj21WLAI-ncLu8NS4OPf3utOXGzaVwR4CBiVLOG7Kt_dowbPqEbjSaqUgJhIrDFKiNy_77h1dhl4yQ9IUAlSD1JtjWqaS_FS_NUNwyeR5RblzeqfGMCqqlJiLPIXmFSRWJ6-lBlYrV0GvDr423fGoZ_cpFpioqu_zwpIPgB9FYBYWoMVd1FKrL6vvdBd0a6dQiFkBXMzwPpKkPdK20X-xvoRnWPRb76hY67w6Jjx9Or20lX0EkU3-o4Q");'></div>
+<div class="flex flex-col gap-1 items-end max-w-[85%]">
+<span class="text-[11px] font-medium text-slate-400">User</span>
+<div class="p-3 bg-primary rounded-2xl rounded-tr-none text-sm leading-relaxed text-white shadow-md">
+<p>Oh right, I missed that return statement.</p>
+</div>
+</div>
+</div>
+<!-- AI Message -->
+<div class="flex items-start gap-3">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-8 shrink-0 border border-slate-600" data-alt="Abstract geometric pattern representing AI" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDwlbDrfyeIUsH512fjJm7-RJLSBK-KI9kDXOZIzy9V47anFmrIYcw7XeffVtoXVfAU49YbM7HomfYU3UcDhfDg7bfw63Tqzow8ZU2hvfxhHRyPVEGCIJrchtjMLM4xbsyps_Cq9rE-s4QjD_BgyypmKBLtSLDU0IyfbE4ma9jS0WORK60VL7c2YLk50-9GKNWLvRF46HcHczt8W4w9-I1ObFv1uN9h7vs325zF9P9NvtPXMLK71DKQ7MsHHzX21PbFt5e0yV1eBw");'></div>
+<div class="flex flex-col gap-1 max-w-[85%]">
+<span class="text-[11px] font-medium text-slate-400">AI Mentor</span>
+<div class="p-3 bg-slate-800 rounded-2xl rounded-tl-none border border-slate-700 text-sm leading-relaxed text-slate-200 shadow-sm">
+<p>Exactly! Add that line and try running the test cases again. Would you like a hint for optimization?</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-3 border-t border-border-dark bg-[#1E293B]">
+<div class="flex flex-col gap-2">
+<button class="w-full flex items-center justify-center gap-2 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-lg transition-all active:scale-[0.98] border border-slate-600/50">
+<span class="material-symbols-outlined text-[18px] text-yellow-400">lightbulb</span>
+                            Ask Hint
+                        </button>
+<div class="relative">
+<input class="w-full bg-[#0F172A] text-sm text-white placeholder-slate-500 rounded-lg border border-slate-700 px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="Type a message..." type="text"/>
+<button class="absolute right-2 top-2 text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">send</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Column 2: The Code (50%) -->
+<section class="flex-1 min-w-[400px] flex flex-col bg-[#0F172A] relative">
+<!-- Editor Header -->
+<div class="h-10 flex bg-[#0F172A] border-b border-border-dark">
+<!-- Tabs -->
+<div class="flex items-end">
+<div class="h-10 px-4 flex items-center gap-2 bg-[#1E293B] border-r border-t-2 border-t-primary border-r-border-dark min-w-[140px]">
+<span class="material-symbols-outlined text-[16px] text-yellow-400">description</span>
+<span class="text-sm text-white font-medium">solution.py</span>
+<button class="ml-auto text-slate-500 hover:text-white">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</div>
+<div class="h-10 px-4 flex items-center gap-2 hover:bg-[#1E293B]/50 border-r border-border-dark min-w-[140px] cursor-pointer">
+<span class="material-symbols-outlined text-[16px] text-blue-400">description</span>
+<span class="text-sm text-slate-400">tests.py</span>
+</div>
+</div>
+<!-- Run Actions -->
+<div class="ml-auto flex items-center px-2 gap-2">
+<button class="flex items-center gap-2 px-4 py-1.5 bg-success/10 hover:bg-success/20 text-success border border-success/20 rounded text-xs font-bold transition-all active:scale-[0.98]">
+<span class="material-symbols-outlined text-[18px] fill-current">play_arrow</span>
+                            RUN
+                        </button>
+</div>
+</div>
+<!-- Editor Body -->
+<div class="flex-1 flex overflow-hidden font-mono text-[13px] leading-6 bg-[#0F172A]">
+<!-- Line Numbers -->
+<div class="w-12 flex flex-col items-end pr-3 py-4 text-slate-600 select-none bg-[#0F172A]">
+<div>1</div>
+<div>2</div>
+<div>3</div>
+<div>4</div>
+<div>5</div>
+<div>6</div>
+<div>7</div>
+<div>8</div>
+<div>9</div>
+<div>10</div>
+<div>11</div>
+<div>12</div>
+<div>13</div>
+<div>14</div>
+<div>15</div>
+</div>
+<!-- Code -->
+<div class="flex-1 py-4 overflow-auto">
+<pre class="pl-2"><span class="text-purple-400">def</span> <span class="text-blue-400">bubble_sort</span><span class="text-slate-300">(arr):</span>
+    <span class="text-slate-500 italic"># Simple implementation of bubble sort</span>
+    <span class="text-slate-300">n</span> <span class="text-pink-400">=</span> <span class="text-yellow-300">len</span><span class="text-slate-300">(arr)</span>
+    
+    <span class="text-purple-400">for</span> <span class="text-slate-300">i</span> <span class="text-purple-400">in</span> <span class="text-yellow-300">range</span><span class="text-slate-300">(n):</span>
+        <span class="text-slate-500 italic"># Track if swap happened</span>
+        <span class="text-slate-300">swapped</span> <span class="text-pink-400">=</span> <span class="text-purple-400">False</span>
+        
+        <span class="text-purple-400">for</span> <span class="text-slate-300">j</span> <span class="text-purple-400">in</span> <span class="text-yellow-300">range</span><span class="text-slate-300">(<span class="text-orange-400">0</span>, n <span class="text-pink-400">-</span> i <span class="text-pink-400">-</span> <span class="text-orange-400">1</span>):</span>
+            <span class="text-purple-400">if</span> <span class="text-slate-300">arr[j]</span> <span class="text-pink-400">&gt;</span> <span class="text-slate-300">arr[j <span class="text-pink-400">+</span> <span class="text-orange-400">1</span>]:</span>
+                <span class="text-slate-300">arr[j], arr[j <span class="text-pink-400">+</span> <span class="text-orange-400">1</span>]</span> <span class="text-pink-400">=</span> <span class="text-slate-300">arr[j <span class="text-pink-400">+</span> <span class="text-orange-400">1</span>], arr[j]</span>
+                <span class="text-slate-300">swapped</span> <span class="text-pink-400">=</span> <span class="text-purple-400">True</span>
+        
+        <span class="text-purple-400">if</span> <span class="text-pink-400">not</span> <span class="text-slate-300">swapped:</span>
+            <span class="text-purple-400">break</span>
+            
+    <span class="text-purple-400">return</span> <span class="text-slate-300">arr</span>
+
+<span class="text-slate-500 italic"># Test the function</span>
+<span class="text-slate-300">data</span> <span class="text-pink-400">=</span> <span class="text-slate-300">[<span class="text-orange-400">64</span>, <span class="text-orange-400">34</span>, <span class="text-orange-400">25</span>, <span class="text-orange-400">12</span>, <span class="text-orange-400">22</span>, <span class="text-orange-400">11</span>, <span class="text-orange-400">90</span>]</span>
+<span class="text-yellow-300">print</span><span class="text-slate-300">(<span class="text-green-400">"Sorted array:"</span>, bubble_sort(data))</span>
+                        </pre>
+</div>
+</div>
+<!-- Console Output (Collapsed/Small) -->
+<div class="h-32 border-t border-border-dark bg-[#0B1120] flex flex-col">
+<div class="flex items-center justify-between px-4 py-1 bg-[#1E293B]/50 border-b border-white/5">
+<span class="text-xs uppercase font-bold text-slate-500">Terminal</span>
+<div class="flex gap-2">
+<button class="text-slate-500 hover:text-slate-300"><span class="material-symbols-outlined text-[16px]">keyboard_arrow_up</span></button>
+<button class="text-slate-500 hover:text-slate-300"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</div>
+</div>
+<div class="p-3 font-mono text-xs text-slate-300 overflow-y-auto">
+<p class="text-slate-500">user@codeforge:~/projects/algo$ python solution.py</p>
+<p class="mt-1">Sorted array: [11, 12, 22, 25, 34, 64, 90]</p>
+<p class="mt-1 text-success">Process finished with exit code 0</p>
+<div class="flex items-center gap-1 mt-1">
+<span class="text-green-500">➜</span>
+<span class="text-cyan-400">~/projects/algo</span>
+<span class="w-1.5 h-3 bg-slate-500 animate-pulse block"></span>
+</div>
+</div>
+</div>
+</section>
+<!-- Column 3: The Whiteboard (30%) -->
+<section class="w-[30%] min-w-[350px] flex flex-col border-l border-border-dark bg-[#0F172A] relative overflow-hidden">
+<!-- Header -->
+<div class="h-10 px-4 flex items-center border-b border-border-dark bg-[#1E293B]">
+<span class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">draw</span>
+                        Whiteboard
+                    </span>
+<div class="ml-auto flex items-center gap-2">
+<span class="text-[10px] text-slate-500 px-2 py-0.5 border border-slate-700 rounded bg-slate-800">ReadOnly</span>
+<button class="text-slate-400 hover:text-white">
+<span class="material-symbols-outlined text-[18px]">fullscreen</span>
+</button>
+</div>
+</div>
+<!-- Canvas Area -->
+<div class="flex-1 relative bg-dot-pattern bg-dot-size cursor-grab active:cursor-grabbing">
+<!-- Floating Toolbar -->
+<div class="absolute top-4 left-1/2 -translate-x-1/2 glass-panel rounded-full px-2 py-1.5 flex items-center gap-1 shadow-lg z-10">
+<button class="p-2 rounded-full hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">pan_tool</span>
+</button>
+<button class="p-2 rounded-full bg-primary text-white shadow-sm transition-transform hover:scale-105">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+<button class="p-2 rounded-full hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">check_box_outline_blank</span>
+</button>
+<button class="p-2 rounded-full hover:bg-slate-700/50 text-slate-300 hover:text-white transition-colors">
+<span class="material-symbols-outlined text-[20px]">arrow_right_alt</span>
+</button>
+<div class="w-px h-4 bg-white/20 mx-1"></div>
+<button class="p-2 rounded-full hover:bg-slate-700/50 text-slate-300 hover:text-red-400 transition-colors">
+<span class="material-symbols-outlined text-[20px]">delete</span>
+</button>
+</div>
+<!-- Diagram Content (SVG Simulation) -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full flex items-center justify-center opacity-80 pointer-events-none">
+<!-- SVG Diagram -->
+<svg fill="none" height="300" viewbox="0 0 400 300" width="400" xmlns="http://www.w3.org/2000/svg">
+<!-- Database Node -->
+<rect fill="#1E293B" fill-opacity="0.5" height="60" rx="4" stroke="#94A3B8" stroke-width="2" width="80" x="50" y="100"></rect>
+<text fill="#CBD5E1" font-family="Inter" font-size="12" text-anchor="middle" x="90" y="135">Database</text>
+<!-- Arrow -->
+<path d="M130 130 L190 130" marker-end="url(#arrowhead)" stroke="#64748B" stroke-width="2"></path>
+<!-- Server Node -->
+<rect fill="#1E293B" fill-opacity="0.5" height="80" rx="4" stroke="#3B82F6" stroke-width="2" width="100" x="190" y="90"></rect>
+<text fill="#93C5FD" font-family="Inter" font-size="12" text-anchor="middle" x="240" y="135">API Server</text>
+<!-- Arrow -->
+<path d="M290 130 L350 130" marker-end="url(#arrowhead)" stroke="#64748B" stroke-width="2"></path>
+<!-- Client Node -->
+<circle cx="380" cy="130" fill="#1E293B" fill-opacity="0.5" r="30" stroke="#10B981" stroke-width="2"></circle>
+<text fill="#6EE7B7" font-family="Inter" font-size="10" text-anchor="middle" x="380" y="135">Client</text>
+<!-- Defs for arrow -->
+<defs>
+<marker id="arrowhead" markerheight="7" markerwidth="10" orient="auto" refx="9" refy="3.5">
+<polygon fill="#64748B" points="0 0, 10 3.5, 0 7"></polygon>
+</marker>
+</defs>
+</svg>
+</div>
+<!-- Zoom Controls -->
+<div class="absolute bottom-4 right-4 glass-panel rounded-lg flex flex-col shadow-lg">
+<button class="p-2 text-slate-400 hover:text-white border-b border-white/10">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-white">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+</div>
+</body></html>

@@ -1,51 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import api from '../api/client.js';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Container,
-    Card,
-    CardContent,
-    Typography,
-    Button,
-    Box,
-    CircularProgress,
-    Alert,
-    LinearProgress,
-    Paper,
-    Stack,
-    Chip,
-    useTheme,
-    alpha,
-    Grid,
-    IconButton,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
-} from '@mui/material';
-import {
-    SchoolRounded,
-    PlayArrowRounded,
-    ExpandMoreRounded,
-    CheckCircleRounded,
-    RadioButtonUncheckedRounded,
-    TrendingUpRounded,
-    AccessTimeRounded,
-    EmojiEventsRounded,
-} from '@mui/icons-material';
+    Terminal,
+    Home,
+    History,
+    Settings,
+    CheckCircle,
+    Lock,
+    Play,
+    Video,
+    Loader2,
+    Sparkles
+} from 'lucide-react';
+import { GlassCard, Button, Badge } from '../components/ui';
 
 const MyLearningPath = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const theme = useTheme();
 
     const [loading, setLoading] = useState(true);
     const [plan, setPlan] = useState(null);
     const [hasPlan, setHasPlan] = useState(false);
     const [error, setError] = useState('');
-    const [expandedModule, setExpandedModule] = useState(null);
+    const [hoveredModule, setHoveredModule] = useState(null);
 
     useEffect(() => {
         fetchLearningPlan();
@@ -56,19 +36,12 @@ const MyLearningPath = () => {
             const { data } = await api.get('/api/learning/plan');
             setHasPlan(data.has_plan);
             setPlan(data.plan);
-            if (data.has_plan && data.plan?.curriculum?.modules?.length > 0) {
-                setExpandedModule(data.plan.curriculum.modules[0].id);
-            }
         } catch (err) {
             setError('Failed to load learning plan');
             console.error(err);
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleStartModule = (moduleId) => {
-        navigate(`/practice/written/${moduleId}`);
     };
 
     const getModuleProgress = (moduleId) => {
@@ -87,224 +60,321 @@ const MyLearningPath = () => {
         return total > 0 ? (completed / total) * 100 : 0;
     };
 
+    const getOverallProgress = () => {
+        if (!plan?.curriculum?.modules) return 0;
+        const modules = plan.curriculum.modules;
+        let completed = 0;
+        modules.forEach((m, idx) => {
+            if (getProgressPercent(m.id, m) >= 100) completed++;
+        });
+        return Math.round((completed / modules.length) * 100);
+    };
+
+    const getModuleStatus = (moduleIndex, module) => {
+        const progress = getProgressPercent(module.id, module);
+        if (progress >= 100) return 'completed';
+        if (moduleIndex === 0) return 'current';
+
+        // Check if previous module is completed
+        const prevModule = plan?.curriculum?.modules?.[moduleIndex - 1];
+        if (prevModule && getProgressPercent(prevModule.id, prevModule) >= 100) {
+            return 'current';
+        }
+        return 'locked';
+    };
+
     if (loading) {
         return (
-            <>
-                <Navbar />
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-                    <CircularProgress size={60} />
-                </Box>
-            </>
+            <div className="min-h-screen bg-bg-dark flex items-center justify-center">
+                <Loader2 className="w-12 h-12 text-primary-blue animate-spin" />
+            </div>
         );
     }
 
     if (!hasPlan) {
         return (
-            <>
-                <Navbar />
-                <Container maxWidth="md" sx={{ mt: 8, textAlign: 'center' }}>
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                        <SchoolRounded sx={{ fontSize: 80, color: 'primary.main', mb: 3 }} />
-                        <Typography variant="h3" fontWeight={800} gutterBottom>
-                            Start Your Learning Journey
-                        </Typography>
-                        <Typography variant="h6" color="text.secondary" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>
-                            Upload your CV and let AI create a personalized 4-week study plan tailored to your target role.
-                        </Typography>
-                        <Button
-                            variant="contained"
-                            size="large"
-                            onClick={() => navigate('/onboarding')}
-                            sx={{ borderRadius: 50, px: 6, py: 2, fontSize: '1.1rem' }}
-                        >
-                            Create My Learning Plan
-                        </Button>
-                    </motion.div>
-                </Container>
-            </>
+            <div className="min-h-screen bg-bg-dark flex items-center justify-center p-4">
+                <GlassCard className="max-w-md text-center">
+                    <Sparkles className="w-16 h-16 text-primary-blue mx-auto mb-4" />
+                    <h2 className="text-2xl font-bold text-white mb-2">No Learning Plan Yet</h2>
+                    <p className="text-slate-400 mb-6">
+                        Complete the onboarding to get your personalized learning path.
+                    </p>
+                    <Button variant="primary" onClick={() => navigate('/onboarding')}>
+                        Start Onboarding
+                    </Button>
+                </GlassCard>
+            </div>
         );
     }
 
-    const curriculum = plan?.curriculum || {};
-    const modules = curriculum.modules || [];
-    const weakPoints = curriculum.weak_points || [];
+    const modules = plan?.curriculum?.modules || [];
 
     return (
-        <>
-            <Navbar />
-            <Box
-                sx={{
-                    minHeight: '100vh',
-                    background: theme.palette.mode === 'dark'
-                        ? 'linear-gradient(135deg, #121212 0%, #1e1e1e 100%)'
-                        : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    pt: 4,
-                    pb: 8,
-                }}
-            >
-                <Container maxWidth="lg">
+        <div className="min-h-screen bg-bg-dark flex overflow-hidden">
+            {/* Sidebar */}
+            <aside className="w-20 h-screen border-r border-white/10 flex flex-col items-center py-8 bg-bg-dark sticky top-0">
+                {/* Brand */}
+                <div className="mb-10 text-primary-blue">
+                    <Terminal size={32} />
+                </div>
+
+                {/* Nav Items */}
+                <nav className="flex flex-col gap-6 w-full items-center">
+                    <button className="p-3 rounded-xl bg-primary-blue/10 text-primary-blue transition-all hover:bg-primary-blue/20 group relative">
+                        <Home size={20} />
+                        <span className="absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 z-50">
+                            Home
+                        </span>
+                    </button>
+                    <button className="p-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group relative">
+                        <History size={20} />
+                        <span className="absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 z-50">
+                            History
+                        </span>
+                    </button>
+                    <button className="p-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all group relative">
+                        <Settings size={20} />
+                        <span className="absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap border border-white/10 z-50">
+                            Settings
+                        </span>
+                    </button>
+                </nav>
+
+                {/* User Profile */}
+                <div className="mt-auto">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-blue to-accent-purple border-2 border-white/10" />
+                </div>
+            </aside>
+
+            {/* Main Content */}
+            <main className="flex-1 h-screen overflow-y-auto relative">
+                {/* Background Glows */}
+                <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+                    <div className="absolute top-[-10%] left-[30%] w-[500px] h-[500px] bg-primary-blue/10 rounded-full blur-[120px]" />
+                    <div className="absolute bottom-[-10%] right-[20%] w-[600px] h-[600px] bg-accent-purple/10 rounded-full blur-[120px]" />
+                </div>
+
+                <div className="relative z-10 max-w-4xl mx-auto px-6 py-10">
                     {/* Header */}
-                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-                        <Box sx={{ mb: 4, color: 'white' }}>
-                            <Typography variant="h3" fontWeight={800} gutterBottom>
-                                🎯 Your Learning Path
-                            </Typography>
-                            <Typography variant="h6" sx={{ opacity: 0.9 }}>
-                                Target Role: <strong>{plan?.target_role || 'Software Engineer'}</strong>
-                            </Typography>
-                        </Box>
-                    </motion.div>
+                    <header className="flex flex-col gap-6 mb-16">
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <p className="text-primary-blue font-medium tracking-wider text-sm mb-2 uppercase">
+                                    Current Sprint
+                                </p>
+                                <h1 className="text-4xl font-bold tracking-tight text-white mb-2">
+                                    {plan?.target_role || 'Full Stack Mastery'}
+                                </h1>
+                                <p className="text-slate-400">Personalized Learning Path</p>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-2xl font-bold text-white mb-1">{getOverallProgress()}%</div>
+                                <p className="text-slate-500 text-sm">Overall Completion</p>
+                            </div>
+                        </div>
 
-                    {/* Stats Cards */}
-                    <Grid container spacing={3} sx={{ mb: 4 }}>
-                        <Grid item xs={12} md={4}>
-                            <Paper sx={{ p: 3, borderRadius: 4, textAlign: 'center' }}>
-                                <TrendingUpRounded sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-                                <Typography variant="h4" fontWeight={700}>{modules.length}</Typography>
-                                <Typography color="text.secondary">Modules</Typography>
-                            </Paper>
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                            <Paper sx={{ p: 3, borderRadius: 4, textAlign: 'center' }}>
-                                <AccessTimeRounded sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
-                                <Typography variant="h4" fontWeight={700}>{curriculum.total_estimated_hours || 40}</Typography>
-                                <Typography color="text.secondary">Hours Estimated</Typography>
-                            </Paper>
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                            <Paper sx={{ p: 3, borderRadius: 4, textAlign: 'center' }}>
-                                <EmojiEventsRounded sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-                                <Typography variant="h4" fontWeight={700}>
-                                    {modules.reduce((acc, m) => acc + getModuleProgress(m.id), 0)}
-                                </Typography>
-                                <Typography color="text.secondary">Questions Completed</Typography>
-                            </Paper>
-                        </Grid>
-                    </Grid>
+                        {/* Progress Bar */}
+                        <div className="w-full bg-slate-800/50 rounded-full h-2 border border-white/5">
+                            <motion.div
+                                className="bg-gradient-to-r from-primary-blue to-cyan-400 h-2 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                                initial={{ width: 0 }}
+                                animate={{ width: `${getOverallProgress()}%` }}
+                                transition={{ duration: 1, ease: 'easeOut' }}
+                            />
+                        </div>
+                    </header>
 
-                    {/* Focus Areas */}
-                    {weakPoints.length > 0 && (
-                        <Paper sx={{ p: 3, mb: 4, borderRadius: 4 }}>
-                            <Typography variant="h6" fontWeight={700} gutterBottom>
-                                📍 Focus Areas Identified
-                            </Typography>
-                            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                                {weakPoints.map((point, idx) => (
-                                    <Chip key={idx} label={point} color="warning" variant="outlined" sx={{ mb: 1 }} />
-                                ))}
-                            </Stack>
-                        </Paper>
-                    )}
+                    {/* Timeline Skill Tree */}
+                    <div className="relative flex flex-col">
+                        {/* Vertical Line */}
+                        <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-slate-800 -translate-x-1/2 rounded-full" />
 
-                    {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+                        {/* Completed Progress Line */}
+                        <motion.div
+                            className="absolute left-1/2 top-0 w-1 bg-gradient-to-b from-success via-primary-blue to-slate-800 -translate-x-1/2 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.3)]"
+                            initial={{ height: 0 }}
+                            animate={{ height: `${Math.min(getOverallProgress() + 15, 100)}%` }}
+                            transition={{ duration: 1.5, ease: 'easeOut' }}
+                        />
 
-                    {/* Modules */}
-                    <Stack spacing={2}>
-                        {modules.map((module, idx) => {
-                            const progressPercent = getProgressPercent(module.id, module);
-                            const isCompleted = progressPercent === 100;
+                        {/* Modules */}
+                        <div className="flex flex-col gap-24">
+                            {modules.map((module, idx) => {
+                                const status = getModuleStatus(idx, module);
+                                const isLeft = idx % 2 === 0;
+                                const progress = getProgressPercent(module.id, module);
+                                const isHovered = hoveredModule === module.id;
 
-                            return (
-                                <motion.div
-                                    key={module.id}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: idx * 0.1 }}
-                                >
-                                    <Accordion
-                                        expanded={expandedModule === module.id}
-                                        onChange={() => setExpandedModule(expandedModule === module.id ? null : module.id)}
-                                        sx={{
-                                            borderRadius: '16px !important',
-                                            '&:before': { display: 'none' },
-                                            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                                            overflow: 'hidden',
-                                        }}
+                                return (
+                                    <div
+                                        key={module.id}
+                                        className={`grid grid-cols-[1fr_auto_1fr] gap-8 items-center ${status === 'locked' ? 'opacity-60 hover:opacity-100' : ''
+                                            } transition-opacity duration-300`}
+                                        onMouseEnter={() => setHoveredModule(module.id)}
+                                        onMouseLeave={() => setHoveredModule(null)}
                                     >
-                                        <AccordionSummary
-                                            expandIcon={<ExpandMoreRounded />}
-                                            sx={{
-                                                py: 2,
-                                                px: 3,
-                                                backgroundColor: isCompleted ? alpha(theme.palette.success.main, 0.1) : 'transparent'
-                                            }}
-                                        >
-                                            <Stack direction="row" alignItems="center" spacing={2} sx={{ width: '100%', pr: 2 }}>
-                                                {isCompleted ? (
-                                                    <CheckCircleRounded color="success" sx={{ fontSize: 28 }} />
-                                                ) : (
-                                                    <RadioButtonUncheckedRounded color="action" sx={{ fontSize: 28 }} />
-                                                )}
-                                                <Box sx={{ flexGrow: 1 }}>
-                                                    <Typography variant="h6" fontWeight={700}>
-                                                        Week {module.week}: {module.title}
-                                                    </Typography>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {module.focus_area}
-                                                    </Typography>
-                                                </Box>
-                                                <Chip
-                                                    label={`${getModuleProgress(module.id)}/${getTotalQuestions(module)}`}
-                                                    size="small"
-                                                    color={isCompleted ? 'success' : 'default'}
+                                        {/* Left Side */}
+                                        {isLeft ? (
+                                            <div className="text-right">
+                                                <ModuleCard
+                                                    module={module}
+                                                    status={status}
+                                                    progress={progress}
+                                                    isHovered={isHovered}
+                                                    onPractice={() => navigate(`/workspace/${module.id}?mode=coaching`)}
+                                                    onInterview={() => navigate(`/workspace/${module.id}?mode=interview`)}
+                                                    idx={idx}
                                                 />
-                                            </Stack>
-                                        </AccordionSummary>
-                                        <AccordionDetails sx={{ px: 3, pb: 3 }}>
-                                            <LinearProgress
-                                                variant="determinate"
-                                                value={progressPercent}
-                                                sx={{ height: 8, borderRadius: 4, mb: 3 }}
-                                            />
+                                            </div>
+                                        ) : (
+                                            <div />
+                                        )}
 
-                                            <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-                                                Goals:
-                                            </Typography>
-                                            <Stack spacing={1} sx={{ mb: 3 }}>
-                                                {(module.goals || []).map((goal, gIdx) => (
-                                                    <Typography key={gIdx} variant="body2" color="text.secondary">
-                                                        • {goal}
-                                                    </Typography>
-                                                ))}
-                                            </Stack>
+                                        {/* Center Node */}
+                                        <div className="relative z-10 flex items-center justify-center">
+                                            <NodeCircle status={status} idx={idx} />
+                                        </div>
 
-                                            <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-                                                Practice Questions ({getTotalQuestions(module)}):
-                                            </Typography>
-                                            <Stack spacing={1} sx={{ mb: 3 }}>
-                                                {(module.practice_questions || []).slice(0, 3).map((q, qIdx) => (
-                                                    <Paper key={qIdx} sx={{ p: 2, backgroundColor: alpha(theme.palette.background.default, 0.5) }}>
-                                                        <Stack direction="row" alignItems="center" spacing={1}>
-                                                            <Chip label={q.difficulty} size="small" color={
-                                                                q.difficulty === 'easy' ? 'success' :
-                                                                    q.difficulty === 'medium' ? 'warning' : 'error'
-                                                            } />
-                                                            <Chip label={q.type} size="small" variant="outlined" />
-                                                        </Stack>
-                                                        <Typography variant="body2" sx={{ mt: 1 }}>
-                                                            {q.question?.substring(0, 100)}...
-                                                        </Typography>
-                                                    </Paper>
-                                                ))}
-                                            </Stack>
+                                        {/* Right Side */}
+                                        {!isLeft ? (
+                                            <div className="text-left">
+                                                <ModuleCard
+                                                    module={module}
+                                                    status={status}
+                                                    progress={progress}
+                                                    isHovered={isHovered}
+                                                    onPractice={() => navigate(`/workspace/${module.id}?mode=coaching`)}
+                                                    onInterview={() => navigate(`/workspace/${module.id}?mode=interview`)}
+                                                    idx={idx}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div />
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+};
 
-                                            <Button
-                                                variant="contained"
-                                                startIcon={<PlayArrowRounded />}
-                                                onClick={() => handleStartModule(module.id)}
-                                                sx={{ borderRadius: 50 }}
-                                            >
-                                                {progressPercent > 0 ? 'Continue Practice' : 'Start Practice'}
-                                            </Button>
-                                        </AccordionDetails>
-                                    </Accordion>
-                                </motion.div>
-                            );
-                        })}
-                    </Stack>
-                </Container>
-            </Box>
-        </>
+// Node Circle Component
+const NodeCircle = ({ status, idx }) => {
+    if (status === 'completed') {
+        return (
+            <div className="w-12 h-12 rounded-full bg-bg-dark border-2 border-success text-success flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.4)] z-10">
+                <CheckCircle size={20} />
+            </div>
+        );
+    }
+
+    if (status === 'current') {
+        return (
+            <div className="relative">
+                <motion.div
+                    className="absolute w-20 h-20 -inset-4 bg-primary-blue/20 rounded-full"
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                />
+                <div className="w-14 h-14 rounded-full bg-bg-dark border-4 border-primary-blue text-white flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.6)] z-10 font-bold text-lg">
+                    {idx + 1}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="w-10 h-10 rounded-full bg-bg-dark border-2 border-slate-700 text-slate-600 flex items-center justify-center z-10">
+            <Lock size={14} />
+        </div>
+    );
+};
+
+// Module Card Component
+const ModuleCard = ({ module, status, progress, isHovered, onPractice, onInterview, idx }) => {
+    const isCompleted = status === 'completed';
+    const isCurrent = status === 'current';
+    const isLocked = status === 'locked';
+
+    return (
+        <motion.div
+            className={`
+        relative overflow-hidden rounded-2xl p-6 transition-all duration-300
+        ${isCompleted ? 'glass-card border-success/30' : ''}
+        ${isCurrent ? 'glass-card border-primary-blue/50 shadow-xl shadow-black/20' : ''}
+        ${isLocked ? 'bg-slate-900/40 backdrop-blur-sm border border-white/5' : ''}
+      `}
+            whileHover={!isLocked ? { scale: 1.02, y: -4 } : {}}
+        >
+            {/* Status Badge */}
+            {isCompleted && (
+                <div className="absolute top-4 right-4 text-success">
+                    <CheckCircle size={20} />
+                </div>
+            )}
+            {isCurrent && (
+                <Badge variant="primary" pulse className="absolute top-4 right-4">
+                    Current Module
+                </Badge>
+            )}
+            {isLocked && (
+                <div className="flex items-center gap-2 text-slate-500 mb-2">
+                    <Lock size={14} />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Locked</span>
+                </div>
+            )}
+
+            {/* Title */}
+            <h3 className={`text-xl font-bold mb-2 ${isLocked ? 'text-slate-300' : 'text-white'}`}>
+                Week {idx + 1}: {module.title}
+            </h3>
+
+            {/* Description */}
+            <p className={`text-sm mb-4 ${isLocked ? 'text-slate-500' : 'text-slate-400'}`}>
+                {module.focus_area || module.goals?.[0] || 'Master core concepts and techniques.'}
+            </p>
+
+            {/* Score Badge (Completed) */}
+            {isCompleted && (
+                <Badge variant="success">
+                    Score: {Math.round(progress)}/100
+                </Badge>
+            )}
+
+            {/* Action Overlay (Current - Hover) */}
+            <AnimatePresence>
+                {isCurrent && isHovered && (
+                    <motion.div
+                        className="absolute inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center gap-4 z-20"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <Button variant="success" icon={Play} onClick={onPractice}>
+                            Practice
+                        </Button>
+                        <Button variant="danger" icon={Video} onClick={onInterview}>
+                            Simulate
+                        </Button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Locked Overlay */}
+            {isLocked && isHovered && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                    <p className="text-white text-sm font-medium flex items-center gap-2">
+                        <Lock size={14} />
+                        Complete Week {idx} to unlock
+                    </p>
+                </div>
+            )}
+        </motion.div>
     );
 };
 
